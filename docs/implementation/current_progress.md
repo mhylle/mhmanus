@@ -1,5 +1,9 @@
 # AI Agent System - Current Implementation Progress
 
+> **⚠️ NOTICE: This document is outdated as of May 30, 2025**  
+> **Please refer to [consolidated_status.md](./consolidated_status.md) for the latest implementation status**  
+> This document is preserved for historical reference only.
+
 ## Overview
 As of May 29, 2025, we have successfully completed Phase 1 and Phase 2 of the AI Agent System implementation. The system now has a functional foundation with LLM integration and a complete task management system.
 

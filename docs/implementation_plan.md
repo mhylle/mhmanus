@@ -1,5 +1,9 @@
 # AI Agent System Implementation Plan
 
+> **📌 NOTE: This is the original implementation plan**  
+> **For the current active plan, see [revised_local_plan.md](./implementation/revised_local_plan.md)**  
+> **For current implementation status, see [consolidated_status.md](./implementation/consolidated_status.md)**
+
 ## Overview
 This document outlines a phased implementation approach for building the autonomous AI agent system. Each phase is designed to be independently testable with clear deliverables and success criteria.
 
