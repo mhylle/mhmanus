@@ -1,0 +1,49 @@
+<div class="chat-container">
+  <div class="chat-header">
+    <h2>AI Agent Chat</h2>
+    <span class="status">
+      @if (llmService.isLoading()) {
+        <span class="loading">Processing...</span>
+      } @else {
+        <span class="ready">Ready</span>
+      }
+    </span>
+  </div>
+
+  <div class="messages-container" #scrollContainer>
+    @for (message of llmService.messages(); track message.timestamp) {
+      <div class="message" [class.user]="message.role === 'user'" [class.assistant]="message.role === 'assistant'">
+        <div class="message-header">
+          <span class="role">{{ message.role === 'user' ? 'You' : 'AI Agent' }}</span>
+          <span class="time">{{ message.timestamp | date:'short' }}</span>
+        </div>
+        <div class="message-content">{{ message.content }}</div>
+      </div>
+    }
+    
+    @if (llmService.messages().length === 0) {
+      <div class="empty-state">
+        <p>Start a conversation with the AI agent!</p>
+        <p class="hint">Try asking: "Hello, can you help me with a coding task?"</p>
+      </div>
+    }
+  </div>
+
+  <div class="input-container">
+    <input 
+      type="text" 
+      [(ngModel)]="inputMessage" 
+      (keyup.enter)="sendMessage()"
+      placeholder="Type your message..."
+      class="message-input"
+      [disabled]="llmService.isLoading()"
+    />
+    <button 
+      (click)="sendMessage()" 
+      class="send-button"
+      [disabled]="!inputMessage().trim() || llmService.isLoading()"
+    >
+      Send
+    </button>
+  </div>
+</div>

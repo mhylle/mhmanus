@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # Frontend - Angular 19
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mhmanus-frontend
+    ports:
+      - "4200:4200"
+    environment:
+      - NODE_ENV=development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - frontend-net
+
+  # Backend - NestJS 11
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mhmanus-backend
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://mhmanus:mhmanus123@postgres:5432/mhmanus_db
+      - REDIS_URL=redis://redis:6379
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=qwen3:14b
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+      - ollama
+    networks:
+      - frontend-net
+      - backend-net
+      - data-net
+
+  # PostgreSQL with pgvector
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: mhmanus-postgres
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_USER=mhmanus
+      - POSTGRES_PASSWORD=mhmanus123
+      - POSTGRES_DB=mhmanus_db
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mhmanus -d mhmanus_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data-net
+
+  # Redis for caching and queuing
+  redis:
+    image: redis:7-alpine
+    container_name: mhmanus-redis
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data-net
+
+  # Ollama for local LLM
+  ollama:
+    image: ollama/ollama:latest
+    container_name: mhmanus-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    environment:
+      - OLLAMA_MODELS=/root/.ollama/models
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/tags"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - backend-net
+
+  # Model initialization service
+  model-init:
+    image: curlimages/curl:latest
+    container_name: mhmanus-model-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    command: >
+      sh -c "
+        echo 'Waiting for Ollama to be ready...' &&
+        sleep 10 &&
+        echo 'Pulling Qwen3 14B model...' &&
+        curl -X POST http://ollama:11434/api/pull -d '{\"name\":\"qwen3:14b\"}' &&
+        echo 'Model pull initiated'
+      "
+    networks:
+      - backend-net
+
+networks:
+  frontend-net:
+    driver: bridge
+  backend-net:
+    driver: bridge
+  data-net:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  ollama_data:

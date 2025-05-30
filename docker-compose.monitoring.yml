@@ -1,0 +1,83 @@
+version: '3.8'
+
+services:
+  # Distributed tracing
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: mhmanus-jaeger
+    ports:
+      - "16686:16686"  # Jaeger UI
+      - "4317:4317"    # OTLP gRPC receiver
+      - "4318:4318"    # OTLP HTTP receiver
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    networks:
+      - mhmanus-network
+
+  # Metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: mhmanus-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - mhmanus-network
+
+  # Visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: mhmanus-grafana
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Admin
+      - GF_AUTH_DISABLE_LOGIN_FORM=true
+    volumes:
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    networks:
+      - mhmanus-network
+
+  # Log aggregation
+  loki:
+    image: grafana/loki:latest
+    container_name: mhmanus-loki
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml
+      - loki-data:/loki
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - mhmanus-network
+
+  # Log shipper
+  promtail:
+    image: grafana/promtail:latest
+    container_name: mhmanus-promtail
+    volumes:
+      - /var/log:/var/log:ro
+      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml
+      - ./backend/logs:/app/backend/logs:ro
+      - ./frontend/logs:/app/frontend/logs:ro
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - mhmanus-network
+
+networks:
+  mhmanus-network:
+    external: true
+
+volumes:
+  prometheus-data:
+  grafana-data:
+  loki-data:
