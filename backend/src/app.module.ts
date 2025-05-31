@@ -23,8 +23,8 @@ import configuration from './config/configuration';
     ThrottlerModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => ([{
-        ttl: configService.get('throttle.ttl'),
-        limit: configService.get('throttle.limit'),
+        ttl: configService.get('throttle.ttl') || 60000,
+        limit: configService.get('throttle.limit') || 10,
       }]),
       inject: [ConfigService],
     }),
