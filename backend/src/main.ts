@@ -2,9 +2,14 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
+import { TracingMiddleware } from './monitoring/middleware/tracing.middleware';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  // Apply tracing middleware
+  const tracingMiddleware = app.get(TracingMiddleware);
+  app.use(tracingMiddleware.use.bind(tracingMiddleware));
 
   // Enable CORS
   app.enableCors({
@@ -31,6 +36,7 @@ async function bootstrap() {
     .addTag('llm', 'LLM interaction endpoints')
     .addTag('memory', 'Memory service endpoints')
     .addTag('code-generation', 'Autonomous code generation')
+    .addTag('monitoring', 'Monitoring and metrics endpoints')
     .build();
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api', app, document);

@@ -1,0 +1,122 @@
+groups:
+  - name: mhmanus_alerts
+    interval: 30s
+    rules:
+      # Agent performance alerts
+      - alert: HighAgentFailureRate
+        expr: |
+          (
+            sum(rate(mhmanus_agent_execution_total{status="failure"}[5m])) 
+            / 
+            sum(rate(mhmanus_agent_execution_total[5m]))
+          ) > 0.5
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High agent failure rate detected"
+          description: "Agent failure rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+
+      - alert: SlowAgentExecution
+        expr: |
+          histogram_quantile(0.95, rate(mhmanus_agent_execution_duration_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Agent execution time is high"
+          description: "95th percentile agent execution time is {{ $value }}s"
+
+      # Task processing alerts
+      - alert: TaskQueueBacklog
+        expr: sum(mhmanus_task_queue_size) > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Task queue backlog detected"
+          description: "{{ $value }} tasks are waiting in queue"
+
+      - alert: NoTasksProcessed
+        expr: sum(rate(mhmanus_task_total[10m])) == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No tasks processed recently"
+          description: "No tasks have been processed in the last 10 minutes"
+
+      # System resource alerts
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            process_resident_memory_bytes{job="backend"} 
+            / 
+            machine_memory_bytes
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High memory usage detected"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: mhmanus_database_connections{state="available"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool exhausted"
+          description: "No available database connections"
+
+      # API performance alerts
+      - alert: HighAPIResponseTime
+        expr: |
+          histogram_quantile(0.95, rate(mhmanus_api_request_duration_bucket[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile API response time is {{ $value }}s"
+
+      - alert: HighAPIErrorRate
+        expr: |
+          (
+            sum(rate(mhmanus_api_request_duration_count{status_code=~"5.."}[5m]))
+            /
+            sum(rate(mhmanus_api_request_duration_count[5m]))
+          ) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API error rate"
+          description: "API error rate is {{ $value | humanizePercentage }}"
+
+      # LLM usage alerts
+      - alert: ExcessiveLLMTokenUsage
+        expr: |
+          sum(rate(mhmanus_llm_tokens_used[1h])) > 100000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Excessive LLM token usage"
+          description: "Using {{ $value }} tokens per hour"
+
+      # Tool usage alerts
+      - alert: HighToolFailureRate
+        expr: |
+          (
+            sum(rate(mhmanus_tool_usage_total{success="false"}[5m]))
+            /
+            sum(rate(mhmanus_tool_usage_total[5m]))
+          ) > 0.3
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High tool failure rate"
+          description: "Tool failure rate is {{ $value | humanizePercentage }}"
