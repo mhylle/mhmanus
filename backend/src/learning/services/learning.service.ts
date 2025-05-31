@@ -84,7 +84,7 @@ export class LearningService {
     );
 
     // Update strategy success if one was applied
-    const strategyId = metrics.context?.appliedStrategyId;
+    const strategyId = (metrics as any).context?.appliedStrategyId;
     if (strategyId) {
       await this.adaptation.updateStrategySuccess(strategyId, success);
     }

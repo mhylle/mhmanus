@@ -174,7 +174,7 @@ export class LearningController {
       { name: 'create_directory', category: 'file' },
     ];
 
-    const generatedMetrics = [];
+    const generatedMetrics: any[] = [];
 
     // Generate 20 test metrics
     for (let i = 0; i < 20; i++) {
@@ -210,7 +210,7 @@ export class LearningController {
       );
 
       // Add context
-      metric.context = { taskType };
+      (metric as any).context = { taskType };
       generatedMetrics.push(metric);
 
       // Small delay to ensure different timestamps
