@@ -2,12 +2,25 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL REQUIREMENT: LOCAL-ONLY DEPLOYMENT
+**NO CLOUD SERVICES** - This application MUST run entirely on-premises:
+- Use Ollama for LLMs (no OpenAI/Anthropic/cloud APIs)
+- Use local PostgreSQL and Redis (no cloud databases)
+- Use local Kubernetes (minikube/k3s/kind, no EKS/GKE/AKS)
+- Use local storage (no S3/cloud storage)
+- Use local container registry (no Docker Hub/cloud registries)
+- All monitoring must be self-hosted (Prometheus/Grafana)
+
 ## Architecture Overview
 
 This is a full-stack TypeScript application consisting of:
 - **Frontend**: Angular 19 application (port 4200)
 - **Backend**: NestJS 11 API server (port 3000)
-- **Documentation**: AI agent architecture design using Ollama and LLMs
+- **LLM**: Ollama with local models only
+- **Database**: PostgreSQL with pgvector (local container)
+- **Cache/Queue**: Redis (local container)
+- **Monitoring**: Self-hosted Prometheus, Grafana, Jaeger
+- **Documentation**: AI agent architecture design using local LLMs
 
 ## Common Commands
 
