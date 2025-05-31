@@ -8,6 +8,8 @@ import { LLMModule } from './llm/llm.module';
 import { TasksModule } from './tasks/tasks.module';
 import { AgentsModule } from './agents/agents.module';
 import { MemoryModule } from './memory/memory.module';
+import { ExecutionModule } from './execution/execution.module';
+import { ToolsModule } from './tools/tools.module';
 
 @Module({
   imports: [
@@ -39,6 +41,8 @@ import { MemoryModule } from './memory/memory.module';
     TasksModule,
     AgentsModule,
     MemoryModule,
+    ExecutionModule,
+    ToolsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { BaseAgent } from '../base/base.agent';
 import { LLMService } from '../../llm/llm.service';
 import { MemoryService } from '../../memory/memory.service';
+import { ToolService } from '../../tools/services/tool.service';
+import { ToolPermission, ToolContext } from '../../tools/interfaces/tool.interface';
 import {
   AgentCapability,
   AgentContext,
@@ -37,7 +39,11 @@ export class CodeAgent extends BaseAgent {
     maxConcurrentTasks: 3,
   };
 
-  constructor(llmService: LLMService, memoryService: MemoryService) {
+  constructor(
+    llmService: LLMService, 
+    memoryService: MemoryService,
+    private toolService: ToolService,
+  ) {
     super(llmService, memoryService);
   }
 
@@ -309,6 +315,19 @@ Follow TypeScript best practices and include proper documentation.`;
 
     generatedCode.set(filePath, code);
 
+    // Write file using MCP filesystem tool
+    const toolContext: ToolContext = {
+      agentId: this.id,
+      taskId: context.taskId,
+      permissions: [ToolPermission.FileWrite],
+      workspace: context.workspace,
+    };
+
+    const writeResult = await this.toolService.writeFile(filePath, code, toolContext);
+    if (!writeResult.success) {
+      this.logger.warn(`Failed to write file ${filePath}: ${writeResult.error}`);
+    }
+
     // Store in semantic memory
     if (this.memoryService) {
       await this.memoryService.semantic.storeEmbedding(code, {
@@ -392,6 +411,19 @@ Requirements:
       step.input.path || `src/services/${step.input.name}.service.ts`;
 
     generatedCode.set(filePath, code);
+
+    // Write file using MCP filesystem tool
+    const toolContext: ToolContext = {
+      agentId: this.id,
+      taskId: context.taskId,
+      permissions: [ToolPermission.FileWrite],
+      workspace: context.workspace,
+    };
+
+    const writeResult = await this.toolService.writeFile(filePath, code, toolContext);
+    if (!writeResult.success) {
+      this.logger.warn(`Failed to write file ${filePath}: ${writeResult.error}`);
+    }
 
     // Store code snippet
     if (this.memoryService) {

@@ -25,6 +25,7 @@ export interface AgentContext {
   sharedMemory: Map<string, any>;
   trace: ExecutionTrace;
   decisions?: Decision[];
+  workspace?: string;
 }
 
 export interface ExecutionTrace {
