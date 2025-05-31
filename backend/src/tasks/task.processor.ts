@@ -1,6 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { TasksService } from './tasks.service';
 import { LLMService } from '../llm/llm.service';
 import { TaskStatus } from './entities/task.entity';
@@ -16,6 +17,7 @@ export class TaskProcessor {
     private llmService: LLMService,
     private taskGateway: TaskGateway,
     private agentsService: AgentsService,
+    private eventEmitter: EventEmitter2,
   ) {}
 
   @Process('process-task')

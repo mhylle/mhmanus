@@ -1,0 +1,34 @@
+import { BaseAgent } from '../base/base.agent';
+import { LLMService } from '../../llm/llm.service';
+import { MemoryService } from '../../memory/memory.service';
+import { AgentCapability, AgentContext, AgentPlan, ExecutionResult, AgentMetadata, Plan, AgentResult } from '../interfaces/agent.interface';
+import { Task } from '../../tasks/entities/task.entity';
+export declare class CodeAgent extends BaseAgent {
+    id: string;
+    name: string;
+    description: string;
+    capabilities: AgentCapability[];
+    metadata: AgentMetadata;
+    constructor(llmService: LLMService, memoryService: MemoryService);
+    protected onInitialize(): Promise<void>;
+    canHandle(task: Task): Promise<boolean>;
+    protected createPlan(task: Task, context: AgentContext): Promise<Plan>;
+    protected executePlan(plan: Plan, context: AgentContext): Promise<AgentResult>;
+    generateAgentPlan(task: Task, context: AgentContext): Promise<AgentPlan>;
+    executeAgentPlan(plan: AgentPlan, context: AgentContext): Promise<ExecutionResult>;
+    private executeCodeStep;
+    private generateInterface;
+    private generateImplementation;
+    private generateTest;
+    private refactorCode;
+    private applyLearnedPattern;
+    private buildCodePlanningPrompt;
+    private generateCodeSteps;
+    private calculateConfidence;
+    private extractCode;
+    private analyzeImprovements;
+    private storeSuccessfulPatterns;
+    private extractPatternsFromCode;
+    private getRelevantMemory;
+    private parseLLMResponse;
+}

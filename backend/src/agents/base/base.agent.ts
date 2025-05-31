@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { v4 as uuidv4 } from 'uuid';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Task } from '../../tasks/entities/task.entity';
 import { LLMService } from '../../llm/llm.service';
 import { MemoryService } from '../../memory/memory.service';
@@ -24,8 +25,7 @@ export abstract class BaseAgent implements IAgent {
   constructor(
     protected readonly llmService: LLMService,
     protected readonly memoryService?: MemoryService,
-    // TODO: Add tool registry when implemented
-    // TODO: Add telemetry service when implemented
+    protected readonly eventEmitter?: EventEmitter2,
   ) {
     this.logger = new Logger(this.constructor.name);
   }
@@ -116,6 +116,14 @@ export abstract class BaseAgent implements IAgent {
         planSteps: plan.steps.length,
       });
 
+      // Emit execution start event for learning
+      if (this.eventEmitter) {
+        this.eventEmitter.emit('agent.execution.start', {
+          agentId: this.metadata.id,
+          taskId: context.taskId,
+        });
+      }
+
       const result = await this.executePlan(plan, context);
       tokensUsed = result.tokensUsed || 0;
 
@@ -126,6 +134,16 @@ export abstract class BaseAgent implements IAgent {
         duration,
         tokensUsed,
       });
+
+      // Emit execution complete event for learning
+      if (this.eventEmitter) {
+        this.eventEmitter.emit('agent.execution.complete', {
+          agentId: this.metadata.id,
+          taskId: context.taskId,
+          success: result.success,
+          quality: result.output ? 0.8 : 0.2, // Simple quality estimate
+        });
+      }
 
       // Store in short-term memory if available
       if (this.memoryService && context) {

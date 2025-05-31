@@ -1,5 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
-import { EventEmitterModule } from '@nestjs/event-emitter';
+import { EventEmitterModule, EventEmitter2 } from '@nestjs/event-emitter';
 import { LLMModule } from '../llm/llm.module';
 import { MemoryModule } from '../memory/memory.module';
 import { DirectorAgent } from './director/director.agent';

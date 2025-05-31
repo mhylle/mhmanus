@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { BaseAgent } from '../base/base.agent';
 import { LLMService } from '../../llm/llm.service';
 import { MemoryService } from '../../memory/memory.service';
@@ -37,8 +38,12 @@ export class CodeAgent extends BaseAgent {
     maxConcurrentTasks: 3,
   };
 
-  constructor(llmService: LLMService, memoryService: MemoryService) {
-    super(llmService, memoryService);
+  constructor(
+    llmService: LLMService,
+    memoryService: MemoryService,
+    eventEmitter: EventEmitter2,
+  ) {
+    super(llmService, memoryService, eventEmitter);
   }
 
   protected async onInitialize(): Promise<void> {
